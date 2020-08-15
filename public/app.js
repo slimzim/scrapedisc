@@ -1,30 +1,37 @@
-$(".scrape").click(() => {
+$(".scrape").on("click", () => {
   console.log("clicked")
+
+  $.getJSON("/scrape", function(data) {
+    
+      console.log(data)
+      location.reload()
+  })
+    
+
+
+
 })
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Grab the articles as a json
-$.getJSON("/articles", function(data) {
+// $.getJSON("/articles", function(data) {
+//   var articles = []
+//   for (var i=0; i<data.length; i++) {
+//     var newObj = {
+//       title: data[i].title,
+//       href: data[i].href,
+//       img: data[i].img,
+//       summary: data[i].summary + "..."
+//     }
+//     articles.push(newObj)
+//   }
+// });
+
   // For each one
-  for (var i = 0; i < data.length; i++) {
-    // Display the apropos information on the page
-    $("#articles").append("<p data-id='" + data[i]._id + "'>" + data[i].title + "<br />" + data[i].link + "</p>");
-  }
-});
+  // for (var i = 0; i < data.length; i++) {
+  //   // Display the apropos information on the page
+  //   $("#articles").append("<p data-id='" + data[i]._id + "'>" + data[i].title + "<br />" + data[i].href + "</p>");
+  // }
+
 // Whenever someone clicks a p tag
 $(document).on("click", "p", function() {
   // Empty the notes from the note section

@@ -1,6 +1,8 @@
 var express = require("express")
+var exphbs = require("express-handlebars");
 var logger = require("morgan");
-var mongoose = require("mongoose");
+var mongoose = require("mongoose"); 
+
 // Our scraping tools
 // Axios is a promised-based http library, similar to jQuery's Ajax method
 // It works on the client and on the server
@@ -11,6 +13,16 @@ var db = require("./models");
 var PORT = 3000;
 // Initialize Express
 var app = express();
+
+// Handlebars
+app.engine(
+  "handlebars",
+  exphbs({
+    defaultLayout: "main", 
+  })
+);
+app.set("view engine", "handlebars");
+
 // Configure middleware
 // Use morgan logger for logging requests
 app.use(logger("dev"));
@@ -28,8 +40,21 @@ mongoose.connect("mongodb://localhost/scrapedisc", { useNewUrlParser: true });
 // ROUTES
 // =================================================================================
 
+app.get("/", function(req, res) {
+  db.Article.find({}).then(function(data) {
+    console.log(data)
+    res.render("index", {
+      articleList: data
+    }) 
+  });
 
-// A GET route for scraping the echoJS website
+app.get("/saved", function(req, res) {
+  res.render("saved")
+});
+
+var articles = []
+
+// A GET route for scraping the Slippedisc website
 app.get("/scrape", function(req, res) {
   // First, we grab the body of the html with axios
   axios.get("http://www.slippedisc.com/").then(function(response) {
@@ -39,13 +64,10 @@ app.get("/scrape", function(req, res) {
       $body = $(response.data),
       $articles = $body.find("article")
 
-
-
-    // Now, we grab every h2 within an article tag, and do the following:
     $articles.each(function(i, element) {
       // Save an empty result object
       var result = {};
-      // Add the text and href of every link, and save them as properties of the result object
+      // Add the data
       var $a = $(element).children("a"),
           $title = $(element).find("h3").text(),
           $img = $(element).find("img"),
@@ -57,12 +79,13 @@ app.get("/scrape", function(req, res) {
         img: $img.attr("src"),
         summary: $summary.trim()
       }
-      console.log(result)
       // Create a new Article using the `result` object built from scraping
       db.Article.create(result.items)
         .then(function(dbArticle) {
           // View the added result in the console
+          console.log("Added to DB:")
           console.log(dbArticle);
+          articles.push(dbArticle)
         })
         .catch(function(err) {
           // If an error occurred, log it
@@ -70,7 +93,7 @@ app.get("/scrape", function(req, res) {
         });
     });
     // Send a message to the client
-    res.send("Scrape Complete");
+    res.send("<p>Scrape Complete<p></br><a href='/'>Back Home</a>");
   });
 });
 
@@ -78,21 +101,19 @@ app.get("/scrape", function(req, res) {
 
 
 
-// // Route for getting all Articles from the db
-// app.get("/articles", function(req, res) {
-//   // Grab every document in the Articles collection
-//   db.Article.find({})
-//     .then(function(dbArticle) {
-//       // If we were able to successfully find Articles, send them back to the client
-//       res.json(dbArticle);
-//     })
-//     .catch(function(err) {
-//       // If an error occurred, send it to the client
-//       res.json(err);
-//     });
-// });
-
-
+// Route for getting all Articles from the db
+app.get("/articles", function(req, res) {
+  // Grab every document in the Articles collection
+  db.Article.find({})
+    .then(function(dbArticle) {
+      // If we were able to successfully find Articles, send them back to the client
+      res.json(dbArticle);
+    })
+    .catch(function(err) {
+      // If an error occurred, send it to the client
+      res.json(err);
+    });
+});
 
 
 // // Route for grabbing a specific Article by id, populate it with its note
@@ -109,7 +130,7 @@ app.get("/scrape", function(req, res) {
 //       // If an error occurred, send it to the client
 //       res.json(err);
 //     });
-// });
+});
 
 
 
