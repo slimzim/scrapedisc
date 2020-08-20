@@ -1,15 +1,15 @@
+// REQUIRE NPM PACKAGES
+
 var express = require("express")
 var exphbs = require("express-handlebars");
 var logger = require("morgan");
 var mongoose = require("mongoose"); 
-
-// Our scraping tools
-// Axios is a promised-based http library, similar to jQuery's Ajax method
-// It works on the client and on the server
 var axios = require("axios");
 var cheerio = require("cheerio");
+
 // Require all models
 var db = require("./models");
+
 var PORT = 3000;
 // Initialize Express
 var app = express();
@@ -19,6 +19,11 @@ app.engine(
   "handlebars",
   exphbs({
     defaultLayout: "main", 
+    helpers: {
+      toJSON: function(object){
+        return JSON.stringify(object);
+      }
+    }
   })
 );
 app.set("view engine", "handlebars");
@@ -34,28 +39,40 @@ app.use(express.static("public"));
 // Connect to the Mongo DB
 mongoose.connect("mongodb://localhost/scrapedisc", { useNewUrlParser: true });
 
-
-
 // =================================================================================
-// ROUTES
+// HTML ROUTES
 // =================================================================================
+
+// INDEX
 
 app.get("/", function(req, res) {
-  db.Article.find({}).then(function(data) {
-    console.log(data)
+  db.Article.find({}).lean()
+  .then(function(data) {
     res.render("index", {
       articleList: data
     }) 
   });
-
-app.get("/saved", function(req, res) {
-  res.render("saved")
 });
 
-var articles = []
+// SAVED
 
-// A GET route for scraping the Slippedisc website
-app.get("/scrape", function(req, res) {
+app.get("/saved", function(req, res) {
+  db.Article.find({saved: {$ne: false}}).lean()
+  .then(function(data){
+    res.render("saved", {
+      articleList: data
+    })
+  })
+  .catch((err) => console.log(err));
+});
+
+// =================================================================================
+// API ROUTES 
+// =================================================================================
+
+// SCRAPE ROUTE
+
+app.get("/api/scrape", function(req, res) {
   // First, we grab the body of the html with axios
   axios.get("http://www.slippedisc.com/").then(function(response) {
     // Then, we load that into cheerio and save it to $ for a shorthand selector
@@ -84,8 +101,7 @@ app.get("/scrape", function(req, res) {
         .then(function(dbArticle) {
           // View the added result in the console
           console.log("Added to DB:")
-          console.log(dbArticle);
-          articles.push(dbArticle)
+          console.log(dbArticle);   
         })
         .catch(function(err) {
           // If an error occurred, log it
@@ -97,12 +113,9 @@ app.get("/scrape", function(req, res) {
   });
 });
 
+// GET ALL ARTICLES - RAW JSON
 
-
-
-
-// Route for getting all Articles from the db
-app.get("/articles", function(req, res) {
+app.get("/api/articles", function(req, res) {
   // Grab every document in the Articles collection
   db.Article.find({})
     .then(function(dbArticle) {
@@ -114,6 +127,68 @@ app.get("/articles", function(req, res) {
       res.json(err);
     });
 });
+
+// GET ALL SAVED ARTICLES 
+
+app.get("/api/saved", function(req,res) {
+  db.Article.find({saved: true}).lean().then(function(data){
+    res.json(data)
+  })
+})
+
+// SAVE ARTICLE
+
+app.post("/api/save/:id/", function(req,res) {
+  db.Article.updateMany(
+    { _id: req.params.id},{saved: true}
+  ).lean().then((data) => res.json(data));
+})
+
+// REMOVE SAVED ARTICLE
+
+app.post("/api/unsave/:id/", function(req,res) {
+  db.Article.updateMany(
+    { _id: req.params.id},{saved: false}).lean()
+    .then((data) => res.json(data));
+})
+
+// DELETE NOTE
+
+app.post("/api/deletenote/:id", function(req,res){
+  db.Note.deleteOne({ _id: req.params.id}, function (err) {
+    if(err) console.log(err);
+    console.log("Successful deletion");
+  // db.Article.findOneAndDelete(req.params.id, function(err){
+  //   if(err) console.log(err);
+  //   console.log("Successful deletion");
+  // }).
+  //   then((data) => res.json(data))
+  })
+})
+
+
+// POST NEW NOTE
+
+app.post("/api/note", function (req, res) {
+  db.Note.create({ title: req.body.title, body: req.body.body })
+    .then(function (dbNote) {
+      console.log(dbNote);
+      db.Article.findOneAndUpdate(
+        { _id: req.body.artNum },
+        { note: dbNote._id }, { new: true }
+      )
+        .populate("note")
+        .lean()
+        .then(function (dbArticle) {
+          res.json(dbArticle);
+        });
+    })
+    .catch(function (err) {
+      console.log(err);
+    });
+});
+
+
 
 
 // // Route for grabbing a specific Article by id, populate it with its note
@@ -130,30 +205,30 @@ app.get("/articles", function(req, res) {
 //       // If an error occurred, send it to the client
 //       res.json(err);
 //     });
-});
+
 
 
 
 
 // // Route for saving/updating an Article's associated Note
-// app.post("/articles/:id", function(req, res) {
-//   // Create a new note and pass the req.body to the entry
-//   db.Note.create(req.body)
-//     .then(function(dbNote) {
-//       // If a Note was created successfully, find one Article with an `_id` equal to `req.params.id`. Update the Article to be associated with the new Note
-//       // { new: true } tells the query that we want it to return the updated User -- it returns the original by default
-//       // Since our mongoose query returns a promise, we can chain another `.then` which receives the result of the query
-//       return db.Article.findOneAndUpdate({ _id: req.params.id }, { note: dbNote._id }, { new: true });
-//     })
-//     .then(function(dbArticle) {
-//       // If we were able to successfully update an Article, send it back to the client
-//       res.json(dbArticle);
-//     })
-//     .catch(function(err) {
-//       // If an error occurred, send it to the client
-//       res.json(err);
-//     });
-// });
+app.post("/saved/:id", function(req, res) {
+  // Create a new note and pass the req.body to the entry
+  db.Article.update(req.body)
+    .then(function(saved) {
+      // If a Note was created successfully, find one Article with an `_id` equal to `req.params.id`. Update the Article to be associated with the new Note
+      // { new: true } tells the query that we want it to return the updated User -- it returns the original by default
+      // Since our mongoose query returns a promise, we can chain another `.then` which receives the result of the query
+      return db.Article.findOneAndUpdate({ _id: req.params.id }, { saved: true }, { new: true });
+    })
+    .then(function(dbArticle) {
+      // If we were able to successfully update an Article, send it back to the client
+      res.json(dbArticle);
+    })
+    .catch(function(err) {
+      // If an error occurred, send it to the client
+      res.json(err);
+    });
+});
 
 
 

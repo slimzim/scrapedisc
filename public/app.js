@@ -1,39 +1,66 @@
 $(".scrape").on("click", () => {
-  console.log("clicked")
-
-  $.getJSON("/scrape", function(data) {
-    
-      console.log(data)
-      location.reload()
+  console.log("scrape button")
+  $.get({
+    type: "GET",
+    url: "/api/scrape",
+    success: (data) => {
+      console.log(data);
+      location.reload();   
+    }
   })
-    
-
-
-
 })
 
-// Grab the articles as a json
-// $.getJSON("/articles", function(data) {
-//   var articles = []
-//   for (var i=0; i<data.length; i++) {
-//     var newObj = {
-//       title: data[i].title,
-//       href: data[i].href,
-//       img: data[i].img,
-//       summary: data[i].summary + "..."
-//     }
-//     articles.push(newObj)
-//   }
-// });
+$(".save-button").on("click", function(){
+  var thisId = $(this).attr("data-id")
+  $.ajax({
+    method: "POST",
+    url: "api/save/" + thisId
+  })
+})
 
-  // For each one
-  // for (var i = 0; i < data.length; i++) {
-  //   // Display the apropos information on the page
-  //   $("#articles").append("<p data-id='" + data[i]._id + "'>" + data[i].title + "<br />" + data[i].href + "</p>");
-  // }
+$(".unsave-button").on("click", function(){
+  var thisId = $(this).attr("data-id")
+  $.ajax({
+    method: "POST",
+    url: "api/unsave/" + thisId,
+    success: (data) => {
+      console.log(data);
+      location.reload(); 
+    }
+  })
+})
+
+$(".noteSubmit").on("click", function(){
+  var note = {
+    artNum: $(this).attr("data-id"),
+  }
+
+  console.log(note.artNum)
+
+    note.title = $("#noteTitle").val();
+    note.body = $("#noteBody").val();
+
+    $.post("/api/note", note).then((res) => {
+      console.log(res)
+    })
+  })
+
+
+$(".deleteNote").on("click", function(){
+  console.log("Delete Note")
+  var thisId = $(this).attr("data-id")
+  $.ajax({
+    method: "POST",
+    url: "api/deletenote/" + thisId,
+    success: (data) => {
+      console.log(data);
+      location.reload(); 
+    }
+  })
+})
 
 // Whenever someone clicks a p tag
-$(document).on("click", "p", function() {
+$("#saver").on("click", function() {
   // Empty the notes from the note section
   $("#notes").empty();
   // Save the id from the p tag
@@ -63,6 +90,15 @@ $(document).on("click", "p", function() {
       }
     });
 });
+
+
+
+
+
+
+
+
+
 // When you click the savenote button
 $(document).on("click", "#savenote", function() {
   // Grab the id associated with the article from the submit button
