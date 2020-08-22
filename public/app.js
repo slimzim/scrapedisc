@@ -1,6 +1,8 @@
+// VARIABLES FOR MODAL BUTTON CREATION
 var noteButtonID = ""
 var dynamicModalButton = ""
 
+// SCRAPE BUTTON
 $(".scrape").on("click", () => {
   console.log("scrape button")
   $.get({
@@ -13,6 +15,7 @@ $(".scrape").on("click", () => {
   })
 })
 
+// SAVE ARTICLES BUTTON
 $(".save-button").on("click", function(){
   var thisId = $(this).attr("data-id")
   $.ajax({
@@ -22,6 +25,7 @@ $(".save-button").on("click", function(){
   alert("Article saved!")
 })
 
+// REMOVE SAVED ARTICLES BUTTON
 $(".unsave-button").on("click", function(){
   var thisId = $(this).attr("data-id")
   $.ajax({
@@ -34,6 +38,7 @@ $(".unsave-button").on("click", function(){
   })
 })
 
+// SUBMIT NOTE IN MODAL
 $(document).on("click", ".noteSubmit", function(){
   var note = {
     artNum: noteButtonID,
@@ -48,6 +53,7 @@ $(document).on("click", ".noteSubmit", function(){
     })
   })
 
+// DELETE NOTE 
 $(".deleteNote").on("click", function(){
   var thisId = $(this).attr("data-id")
   console.log(thisId)
@@ -61,6 +67,7 @@ $(".deleteNote").on("click", function(){
   })
 })
 
+// DYNAMICALLY CREATE SUBMIT BUTTON INSIDE MODAL
 $(".modalSubmitButtonMaker").on("click", function(){
   noteButtonID = $(this).prev().attr("data-id")
   dynamicModalButton = $("<button>")

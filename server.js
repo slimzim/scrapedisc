@@ -16,15 +16,15 @@ var app = express();
 
 // Handlebars
 app.engine(
-  "handlebars",
-  exphbs({
-    defaultLayout: "main", 
-    helpers: {
-      toJSON: function(object){
-        return JSON.stringify(object);
-      }
+"handlebars",
+exphbs({
+  defaultLayout: "main", 
+  helpers: {
+    toJSON: function(object){
+      return JSON.stringify(object);
     }
-  })
+  }
+})
 );
 app.set("view engine", "handlebars");
 
@@ -46,24 +46,24 @@ mongoose.connect("mongodb://localhost/scrapedisc", { useNewUrlParser: true });
 // INDEX
 
 app.get("/", function(req, res) {
-  db.Article.find({}).lean()
-  .then(function(data) {
-    res.render("index", {
-      articleList: data
-    }) 
-  });
+db.Article.find({}).lean()
+.then(function(data) {
+  res.render("index", {
+    articleList: data
+  }) 
+});
 });
 
 // SAVED
 
 app.get("/saved", function(req, res) {
-  db.Article.find({saved: {$ne: false}}).populate("note").lean()
-  .then(function(data){
-    res.render("saved", {
-      articleList: data
-    })
+db.Article.find({saved: {$ne: false}}).populate("note").lean()
+.then(function(data){
+  res.render("saved", {
+    articleList: data
   })
-  .catch((err) => console.log(err));
+})
+.catch((err) => console.log(err));
 });
 
 // =================================================================================
@@ -73,43 +73,42 @@ app.get("/saved", function(req, res) {
 // SCRAPE ROUTE
 
 app.get("/api/scrape", function(req, res) {
-  // First, we grab the body of the html with axios
-  axios.get("http://www.slippedisc.com/").then(function(response) {
-    // Then, we load that into cheerio and save it to $ for a shorthand selector
-    var $ = cheerio.load(response.data);
-    
-      $body = $(response.data),
-      $articles = $body.find("article")
+// First, we grab the body of the html with axios
+axios.get("http://www.slippedisc.com/").then(function(response) {
+  // Then, we load that into cheerio and save it to $ for a shorthand selector
+  var $ = cheerio.load(response.data);
+  
+  $body = $(response.data),
+  $articles = $body.find("article")
 
-    $articles.each(function(i, element) {
-      // Save an empty result object
-      var result = {};
-      // Add the data
-      var $a = $(element).children("a"),
-          $title = $(element).find("h3").text(),
-          $img = $(element).find("img"),
-          $summary = $(element).find("p").text()
-        
-      result.items = {
-        href: $a.attr("href"),
-        title: $title.trim(),
-        img: $img.attr("src"),
-        summary: $summary.trim()
-      }
-      // Create a new Article using the `result` object built from scraping
-      db.Article.create(result.items)
-        .then(function(dbArticle) {
-          // View the added result in the console
-          console.log("Added to DB:")
-          console.log(dbArticle);   
-        })
-        .catch(function(err) {
-          // If an error occurred, log it
-          console.log(err);
-        });
+  $articles.each(function(i, element) {
+    // Save an empty result object
+    var result = {};
+    // Add the data
+    var $a = $(element).children("a"),
+        $title = $(element).find("h3").text(),
+        $img = $(element).find("img"),
+        $summary = $(element).find("p").text()
+      
+    result.items = {
+      href: $a.attr("href"),
+      title: $title.trim(),
+      img: $img.attr("src"),
+      summary: $summary.trim()
+    }
+
+    // Create a new Article using the `result` object built from scraping
+    db.Article.create(result.items)
+      .then(function(dbArticle) {
+        // View the added result in the console
+        console.log("Added to DB:")
+        console.log(dbArticle);   
+      })
+      .catch(function(err) {
+        // If an error occurred, log it
+        console.log(err);
+      });
     });
-    // Send a message to the client
-    res.send("<p>Scrape Complete<p></br><a href='/'>Back Home</a>");
   });
 });
 
@@ -185,63 +184,17 @@ app.post("/api/note", function (req, res) {
         { _id: req.body.artNum },
         { note: dbNote._id }, { new: true }
       )
-        .populate("note")
-        .lean()
-        .then(function (dbArticle) {
-          console.log(dbArticle)
-          res.json(dbArticle);
-          
-        });
+      .populate("note")
+      .lean()
+      .then(function (dbArticle) {
+        console.log(dbArticle)
+        res.json(dbArticle);  
+      });
     })
-    .catch(function (err) {
-      console.log(err);
-    });
+  .catch(function (err) {
+    console.log(err);
+  });
 });
-
-
-
-
-// // Route for grabbing a specific Article by id, populate it with its note
-// app.get("/articles/:id", function(req, res) {
-//   // Using the id passed in the id parameter, prepare a query that finds the matching one in our db...
-//   db.Article.findOne({ _id: req.params.id })
-//     // ..and populate all of the notes associated with it
-//     .populate("note")
-//     .then(function(dbArticle) {
-//       // If we were able to successfully find an Article with the given id, send it back to the client
-//       res.json(dbArticle);
-//     })
-//     .catch(function(err) {
-//       // If an error occurred, send it to the client
-//       res.json(err);
-//     });
-
-
-
-
-
-// // Route for saving/updating an Article's associated Note
-app.post("/saved/:id", function(req, res) {
-  // Create a new note and pass the req.body to the entry
-  db.Article.update(req.body)
-    .then(function(saved) {
-      // If a Note was created successfully, find one Article with an `_id` equal to `req.params.id`. Update the Article to be associated with the new Note
-      // { new: true } tells the query that we want it to return the updated User -- it returns the original by default
-      // Since our mongoose query returns a promise, we can chain another `.then` which receives the result of the query
-      return db.Article.findOneAndUpdate({ _id: req.params.id }, { saved: true }, { new: true });
-    })
-    .then(function(dbArticle) {
-      // If we were able to successfully update an Article, send it back to the client
-      res.json(dbArticle);
-    })
-    .catch(function(err) {
-      // If an error occurred, send it to the client
-      res.json(err);
-    });
-});
-
-
-
 
 // Start the server
 app.listen(PORT, function() {
