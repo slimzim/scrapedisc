@@ -39,9 +39,9 @@
       {{#if note}}
         <div class="card" style="width: 100%">
           <div class="card-body">
-            <h5 class="card-title">Note Title: {{note}}</h5>
-            <p class="card-text">Note Body: {{note}}</p>
-            <button type="button" class="btn btn-primary deleteNote" data-id="{{note}}">Delete Note</button>
+            <h5 class="card-title">Note Title: {{note.title}}</h5>
+            <p class="card-text">Note Body: {{note.body}}</p>
+            <button type="button" class="btn btn-primary deleteNote" data-id="{{note._id}}">Delete Note</button>
           </div> 
         </div>
       {{/if}}
@@ -55,9 +55,9 @@
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         </div>
         <div class="modal-body">
-          <input type="text" class="large" id="noteTitle" placeholder="Note Title">
+          <input type="text" class="large mb-2" id="noteTitle" placeholder="Note Title" style="width: 100%">
           <br>
-          <textarea id="noteBody" placeholder="Note Body"></textarea>
+          <textarea id="noteBody" placeholder="Note Body"style="width: 100%"></textarea>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-primary noteSubmit" data-id="{{_id}}">Submit</button>

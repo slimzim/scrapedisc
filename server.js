@@ -57,7 +57,7 @@ app.get("/", function(req, res) {
 // SAVED
 
 app.get("/saved", function(req, res) {
-  db.Article.find({saved: {$ne: false}}).lean()
+  db.Article.find({saved: {$ne: false}}).populate("note").lean()
   .then(function(data){
     res.render("saved", {
       articleList: data
@@ -155,17 +155,25 @@ app.post("/api/unsave/:id/", function(req,res) {
 // DELETE NOTE
 
 app.post("/api/deletenote/:id", function(req,res){
-  db.Note.deleteOne({ _id: req.params.id}, function (err) {
-    if(err) console.log(err);
-    console.log("Successful deletion");
-  // db.Article.findOneAndDelete(req.params.id, function(err){
-  //   if(err) console.log(err);
-  //   console.log("Successful deletion");
-  // }).
-  //   then((data) => res.json(data))
+    var noteID = req.params.id
+    console.log(noteID)
+    db.Note.deleteOne(
+      { _id: noteID }).lean()
+      .then(function (data) {
+        db.Article.findOneAndUpdate({ note: noteID }, { $unset: {note: ""} }).lean()
+        .then(function(data2){
+          console.log(data2)
+        }).catch(function (err2) {
+          console.log(err2)
+        })
+
+      console.log(data)
+      res.json(data) // <--- Returns null
+      console.log("Note Deleted") 
+    }).catch(function (err) {
+      console.log(err); // Need to delete note from associated Article
   })
 })
-
 
 // POST NEW NOTE
 
@@ -180,7 +188,9 @@ app.post("/api/note", function (req, res) {
         .populate("note")
         .lean()
         .then(function (dbArticle) {
+          console.log(dbArticle)
           res.json(dbArticle);
+          
         });
     })
     .catch(function (err) {
