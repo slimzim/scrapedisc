@@ -30,7 +30,7 @@
               <h5 class="card-title"><a href="{{this.href}}" target="_blank">{{title}}</a></h5>
               <p class="card-text"><small>{{summary}}...</small></p>
               <button type="button" class="btn btn-primary unsave-button" data-id="{{_id}}">Remove from Saved Articles</button>
-              <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#noteModal">Add Note</button>             
+              <button type="button" class="btn btn-primary modalSubmitButtonMaker" data-toggle="modal" data-target="#noteModal">Add Note</button>             
             </div>
           </div>
         </div>
@@ -39,38 +39,38 @@
       {{#if note}}
         <div class="card" style="width: 100%">
           <div class="card-body">
-            <h5 class="card-title">Note Title: {{note.title}}</h5>
-            <p class="card-text">Note Body: {{note.body}}</p>
+            <h5 class="card-title">{{note.title}}</h5>
+            <p class="card-text">{{note.body}}</p>
             <button type="button" class="btn btn-primary deleteNote" data-id="{{note._id}}">Delete Note</button>
           </div> 
         </div>
       {{/if}}
-    
-<!-- Modal -->
-  <div class="modal fade" id="noteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Add Note to {{title}}</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        </div>
-        <div class="modal-body">
-          <input type="text" class="large mb-2" id="noteTitle" placeholder="Note Title" style="width: 100%">
-          <br>
-          <textarea id="noteBody" placeholder="Note Body"style="width: 100%"></textarea>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary noteSubmit" data-id="{{_id}}">Submit</button>
-        </div>
-      </div>
-    </div>
-  </div>
 
     {{else}}
       <p>No Saved Articles</p>
       
     {{/each}}
 
+  </div>
+
+<!-- Modal -->
+  <div class="modal fade" id="noteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Note</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" class="large mb-2" id="noteTitle" placeholder="Note Title" style="width: 100%">
+          <br>
+          <textarea id="noteBody" placeholder="Note Body" style="width: 100%"></textarea>
+        </div>
+        <div class="modal-footer">
+          <div id="dynamicModalButton"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>
