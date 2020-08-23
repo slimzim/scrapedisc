@@ -16,7 +16,8 @@
         <a class="nav-link" href="/saved">Saved Articles</a>
       </li>
       <li>
-          <button class="scrape btn-primary btn">Scrape</a>
+          <button type="button" class="btn btn-primary" id="scrape">Scrape</a>
+          <button type="button" class="btn btn-danger ml-1" id="delete">Delete</a>
       </li>
     </ul>
   </div>
@@ -48,7 +49,9 @@
       </div>
       
     {{else}}
-      <p>No Articles Yet</p>
+      <div class="jumbotron text-center" style="width: 100%">
+        <h1 class="display-4">No Articles</h1>
+      </div>
     {{/each}}
 
   </div>

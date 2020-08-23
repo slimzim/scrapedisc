@@ -3,13 +3,13 @@ var noteButtonID = ""
 var dynamicModalButton = ""
 
 // SCRAPE BUTTON
-$(".scrape").on("click", () => {
+$(document).on("click", "#scrape", (event) => {
   console.log("scrape button")
   $.get({
     type: "GET",
     url: "/api/scrape",
     success: (data) => {
-      console.log(data);
+      console.log("hello there")
       location.reload();   
     }
   })
@@ -66,6 +66,18 @@ $(".deleteNote").on("click", function(){
     }
   })
 })
+
+// DELETE ALL
+$(document).on("click", "#delete", () => {
+  $.get({
+    type: "GET",
+    url: "/delete",
+    success: (data) => {
+      console.log("delete reloading")
+      location.reload()
+    },
+  });
+});
 
 // DYNAMICALLY CREATE SUBMIT BUTTON INSIDE MODAL
 $(".modalSubmitButtonMaker").on("click", function(){

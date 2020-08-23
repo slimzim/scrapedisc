@@ -102,7 +102,8 @@ axios.get("http://www.slippedisc.com/").then(function(response) {
       .then(function(dbArticle) {
         // View the added result in the console
         console.log("Added to DB:")
-        console.log(dbArticle);   
+        console.log(dbArticle);
+        res.json(dbArticle)   
       })
       .catch(function(err) {
         // If an error occurred, log it
@@ -147,7 +148,7 @@ app.post("/api/save/:id/", function(req,res) {
 
 app.post("/api/unsave/:id/", function(req,res) {
   db.Article.updateMany(
-    { _id: req.params.id},{saved: false}).lean()
+    { _id: req.params.id },{ saved: false , $unset: {note: ""}}).lean()
     .then((data) => res.json(data));
 })
 
@@ -195,6 +196,23 @@ app.post("/api/note", function (req, res) {
     console.log(err);
   });
 });
+
+// DELETE ALL
+
+app.get("/delete", function (req, res) {
+  db.Article.remove({})
+    .then(function (data) {
+      res.json(data);
+    })
+    .catch((error) => console.log(error));
+  db.Note.remove({})
+    .then(function (data) {
+      res.json(data);
+    })
+    .catch((error) => console.log(error));
+});
+
+
 
 // Start the server
 app.listen(PORT, function() {
