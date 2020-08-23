@@ -38,7 +38,7 @@ app.use(express.json());
 app.use(express.static("public"));
 // Connect to the Mongo DB
 
-var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/scrapedisc"
+var MONGODB_URI = process.env.MONGODB_URI || "mongodb://user1:password1@ds257698.mlab.com:57698/heroku_g7q490bs"
 mongoose.connect(MONGODB_URI)
 
 // mongoose.connect("mongodb://localhost/scrapedisc", { useNewUrlParser: true });
